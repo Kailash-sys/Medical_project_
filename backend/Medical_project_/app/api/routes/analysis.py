@@ -218,6 +218,11 @@ async def chat_with_ai(request: ChatRequest):
         text = choice.message.content.strip() if choice.message.content else ""
         return {"response": text}
     except Exception as e:
+        if "AuthenticationError" in str(e.__class__.__name__) or "Invalid API Key" in str(e):
+            raise HTTPException(
+                status_code=401,
+                detail="Groq API Key is missing or invalid. Please check your backend .env file."
+            )
         raise HTTPException(
             status_code=500,
             detail=f"AI chat failed: {str(e)}"
