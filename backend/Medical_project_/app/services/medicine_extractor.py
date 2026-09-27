@@ -7,7 +7,7 @@ from app.services.text_cleaner import clean_text
 client = Groq(api_key=GROQ_API_KEY)
 
 MAX_CHARS = 20000
-MODEL_NAME = "openai/gpt-oss-20b"
+MODEL_NAME = "llama3-8b-8192"
 
 
 def extract_json_from_text(text):

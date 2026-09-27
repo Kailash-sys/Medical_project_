@@ -1,6 +1,7 @@
 import os
 import uuid
-from typing import Annotated
+from typing import Annotated, Any
+from pydantic import BaseModel
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
@@ -184,3 +185,40 @@ async def analyze_images(
 
         "interactions": interactions
     }
+
+class ChatRequest(BaseModel):
+    message: str
+    patient_context: Any = None
+
+@router.post("/chat")
+async def chat_with_ai(request: ChatRequest):
+    try:
+        from app.services.app_config import GROQ_API_KEY
+        from groq import Groq
+        
+        client = Groq(api_key=GROQ_API_KEY)
+        
+        system_prompt = "You are a Clinical AI Copilot. The user will ask questions about drug interactions, contraindications, or dosing. Provide accurate, professional medical guidance but include a disclaimer that this is for informational purposes."
+        if request.patient_context:
+            system_prompt += f"\nActive Patient Context: {request.patient_context}"
+            
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": request.message}
+        ]
+        
+        response = client.chat.completions.create(
+            model="llama3-8b-8192",
+            messages=messages,
+            temperature=0.3,
+            max_tokens=1000
+        )
+        
+        choice = response.choices[0]
+        text = choice.message.content.strip() if choice.message.content else ""
+        return {"response": text}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI chat failed: {str(e)}"
+        )

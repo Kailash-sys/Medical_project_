@@ -224,13 +224,14 @@ export const apiService = {
     }
 
     // REAL BACKEND INTEGRATION:
-    return await fetchAPI('/chat', {
+    const backendResult = await fetchAPI('/analysis/chat', {
       method: 'POST',
       body: JSON.stringify({
         message: userMessage,
         patient_context: patientContext
       })
     });
+    return backendResult.response;
   },
 
   /**
